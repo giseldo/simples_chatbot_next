@@ -9,6 +9,83 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar } from "@/components/ui/avatar"
 import { Loader2, Send, User } from "lucide-react"
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+
+// Função utilitária para dividir texto em partes de texto e blocos de código
+function parseMessageContent(content: string) {
+  const regex = /```(python|py)([\s\S]*?)```/gim;
+  const parts: { type: 'code' | 'text'; value: string }[] = [];
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', value: content.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'code', value: match[2].replace(/^\n+|\n+$/g, '') });
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', value: content.slice(lastIndex) });
+  }
+  return parts;
+}
+
+const CodeBlock = ({ code }: { code: string }) => (
+  <div className="relative group my-2">
+    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={() => navigator.clipboard.writeText(code)}
+      >
+        <span className="sr-only">Copy code</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4"
+        >
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+      </Button>
+    </div>
+    <SyntaxHighlighter
+      language="python"
+      style={vscDarkPlus}
+      customStyle={{
+        margin: 0,
+        borderRadius: '0.5rem',
+        padding: '1rem',
+      }}
+    >
+      {code}
+    </SyntaxHighlighter>
+  </div>
+)
+
+function MessageContent({ content }: { content: string }) {
+  const parts = parseMessageContent(content);
+  return (
+    <>
+      {parts.map((part, idx) =>
+        part.type === 'code' ? (
+          <CodeBlock code={part.value} key={idx} />
+        ) : (
+          <span key={idx}>{part.value}</span>
+        )
+      )}
+    </>
+  );
+}
 
 export default function ChatPage() {
   const { messages, input, handleInputChange, handleSubmit, status } = useChat()
@@ -64,7 +141,7 @@ export default function ChatPage() {
                         message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                       }`}
                     >
-                      {message.content}
+                      <MessageContent content={message.content} />
                     </div>
                     {message.role === "assistant" && (
                       <div className="text-xs text-muted-foreground mt-1">
