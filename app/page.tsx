@@ -19,6 +19,11 @@ export default function ChatPage() {
     setIsInputEmpty(e.target.value.trim() === "")
   }
 
+  // Simple token count approximation
+  const getTokenCount = (text: string) => {
+    return Math.ceil(text.split(/\s+/).length * 1.3) // Rough approximation of tokens
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 dark:bg-gray-900">
       <Card className="w-full max-w-2xl h-[600px] flex flex-col">
@@ -53,12 +58,19 @@ export default function ChatPage() {
                       </Avatar>
                     )}
                   </div>
-                  <div
-                    className={`rounded-lg px-4 py-2 ${
-                      message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                    }`}
-                  >
-                    {message.content}
+                  <div className="flex flex-col">
+                    <div
+                      className={`rounded-lg px-4 py-2 ${
+                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`}
+                    >
+                      {message.content}
+                    </div>
+                    {message.role === "assistant" && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Tokens: ~{getTokenCount(message.content)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
