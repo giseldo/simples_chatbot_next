@@ -8,9 +8,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar } from "@/components/ui/avatar"
-import { Loader2, Send, User } from "lucide-react"
+import { Loader2, Send, User, Trash2 } from "lucide-react"
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 // Função utilitária para dividir texto em partes de texto e blocos de código
 function parseMessageContent(content: string) {
@@ -88,12 +99,17 @@ function MessageContent({ content }: { content: string }) {
 }
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange, handleSubmit, status } = useChat()
+  const { messages, input, handleInputChange, handleSubmit, status, reload, setMessages } = useChat()
   const [isInputEmpty, setIsInputEmpty] = useState(true)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleInputChange(e)
     setIsInputEmpty(e.target.value.trim() === "")
+  }
+
+  const handleClearConversation = () => {
+    setMessages([])
+    reload()
   }
 
   // Simple token count approximation
@@ -104,8 +120,39 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 dark:bg-gray-900">
       <Card className="w-full max-w-2xl h-[600px] flex flex-col">
-        <CardHeader className="border-b">
+        <CardHeader className="border-b flex flex-row items-center justify-between">
           <CardTitle className="text-xl">AI Chatbot</CardTitle>
+          {messages.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-destructive hover:text-destructive-foreground"
+                  title="Limpar conversa"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Limpar conversa</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja limpar todo o histórico da conversa? Esta ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleClearConversation}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Limpar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </CardHeader>
 
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
